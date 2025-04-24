@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
+import { getAssetPriceInfo } from '@funkit/api-base';
 
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,34 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const usdcChainId = '1';
+const apiKey = 'Z9SZaOwpmE40KX61mUKWm5hrpGh7WHVkaTvQJpQk';
+
+const usdtAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+const usdtChainId = '137';
+
+const ethAddress = '0x0000000000000000000000000000000000000000';
+const ethChainId = '8453';
+
+const wbtcAddress = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
+const wbtcChainId = '1';
+
 const SwapPage: React.FC = () => {
+  const fetchPrice = async () => {
+    const tokenInfo = await getAssetPriceInfo({
+      chainId: '1',
+      assetTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // usdc
+      apiKey: 'Z9SZaOwpmE40KX61mUKWm5hrpGh7WHVkaTvQJpQk',
+    });
+
+    console.log(tokenInfo);
+  };
+
+  useEffect(() => {
+    fetchPrice();
+  }, []);
+
   return (
     <Layout title="Swap">
       <div className="max-w-2xl mx-auto mt-8">
