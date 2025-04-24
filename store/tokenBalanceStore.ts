@@ -4,6 +4,7 @@ import { formatUnits, parseUnits } from 'ethers';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ensureCorrectDecimals } from '@/lib/utils';
+import { COIN_DECIMALS } from '@/lib/constants';
 
 // Token balance interface
 interface TokenBalance {
@@ -34,14 +35,6 @@ interface TokenBalanceStore {
   hasHydrated: boolean;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
-
-// Decimal configuration for different coins
-const COIN_DECIMALS: Record<string, number> = {
-  USDT: 6,
-  USDC: 6,
-  ETH: 18,
-  WBTC: 18,
-};
 
 // Get decimal places for a coin
 const getCoinDecimals = (coin: CoinName): number => {

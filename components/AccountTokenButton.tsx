@@ -1,4 +1,6 @@
 import { useTokenBalanceStore } from '@/store/tokenBalanceStore';
+import { formatBalance } from '@/lib/utils';
+import { COIN_DECIMALS } from '@/lib/constants';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -13,11 +15,25 @@ const AccountTokenButton = () => {
   const { balances } = useTokenBalanceStore();
 
   const tokens = [
-    { symbol: 'USDT', balance: balances.usdt?.balance },
-    { symbol: 'ETH', balance: balances.eth?.balance },
-    { symbol: 'USDC', balance: balances.usdc?.balance },
-    { symbol: 'WBTC', balance: balances.wbtc?.balance },
+    { symbol: 'USDT', balance: balances.usdt?.balance, decimals: COIN_DECIMALS.USDT },
+    { symbol: 'ETH', balance: balances.eth?.balance, decimals: COIN_DECIMALS.ETH },
+    { symbol: 'USDC', balance: balances.usdc?.balance, decimals: COIN_DECIMALS.USDC },
+    { symbol: 'WBTC', balance: balances.wbtc?.balance, decimals: COIN_DECIMALS.WBTC },
   ];
+
+  // 处理代币余额显示，考虑小数位数
+  const formatTokenBalance = (balance: string | number | undefined, decimals: number): string => {
+    if (!balance) return '0';
+    
+    // 转换为数字
+    const num = typeof balance === 'string' ? parseFloat(balance) : balance;
+    
+    // 根据小数位处理
+    const formatted = num / Math.pow(10, decimals);
+    
+    // 使用格式化函数
+    return formatBalance(formatted);
+  };
 
   return (
     <Dialog>
@@ -37,7 +53,7 @@ const AccountTokenButton = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Balance</span>
-                <span className="text-2xl font-bold">{token.balance}</span>
+                <span className="text-2xl font-bold">{formatTokenBalance(token.balance, token.decimals)}</span>
               </div>
             </div>
           ))}
