@@ -1,50 +1,44 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import Layout from '@/components/layout/layout';
-import Spin from '@/components/Spin';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/components/ui/toast';
-import { CoinName, coinInfoData } from '@/config/coinConfig';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
-import { ensureCorrectDecimals, formatAmount, formatBalance } from '@/lib/utils';
-import { useTokenBalanceStore } from '@/store/tokenBalanceStore';
 import Image from 'next/image';
+
+import { Button } from '@components/button/Button';
+import SwapInput from '@components/input/SwapInput';
+import Layout from '@components/layout/layout';
+import Loader from '@components/loader/Loader';
+import { useToast } from '@components/toast/Toast';
+import { CoinName } from '@config/coin';
+import { useTokenPrice } from '@hooks/useTokenPrice';
+import { useBalanceStore } from '@store/balanceStore';
+import { ensureCorrectDecimals, formatAmount, formatBalance } from '@utils/utils';
 
 const SwapPage: React.FC = () => {
   const { tokenInfo } = useTokenPrice();
-  const { getBalance, swap, hasHydrated, isSwapping } = useTokenBalanceStore();
+  const { getBalance, swap, hasHydrated, isSwapping } = useBalanceStore();
   const { toast } = useToast();
 
   // Set default selected tokens
-  const [sellCoin, setSellCoin] = useState<CoinName>('usdt');
-  const [buyCoin, setBuyCoin] = useState<CoinName>('eth');
+  const [sellToken, setSellToken] = useState<CoinName>('usdt');
+  const [buyToken, setBuyToken] = useState<CoinName>('eth');
 
   // User input amounts
   const [sellAmount, setSellAmount] = useState<string>('');
   const [buyAmount, setBuyAmount] = useState<string>('');
 
   // Balance
-  const sellBalance = getBalance(sellCoin);
-  const buyBalance = getBalance(buyCoin);
+  const sellBalance = getBalance(sellToken);
+  const buyBalance = getBalance(buyToken);
 
   // Reset amounts when selecting tokens
-  const handleSellCoinChange = (value: CoinName) => {
-    setSellCoin(value);
+  const handleSellTokenChange = (value: CoinName) => {
+    setSellToken(value);
     setSellAmount('');
     setBuyAmount('');
   };
 
-  const handleBuyCoinChange = (value: CoinName) => {
-    setBuyCoin(value);
+  const handleBuyTokenChange = (value: CoinName) => {
+    setBuyToken(value);
     setSellAmount('');
     setBuyAmount('');
   };
@@ -62,9 +56,9 @@ const SwapPage: React.FC = () => {
 
     try {
       // Calculate buy amount
-      if (sellCoin && buyCoin) {
-        const sellTokenInfo = tokenInfo.get(sellCoin);
-        const buyTokenInfo = tokenInfo.get(buyCoin);
+      if (sellToken && buyToken) {
+        const sellTokenInfo = tokenInfo.get(sellToken);
+        const buyTokenInfo = tokenInfo.get(buyToken);
 
         if (sellTokenInfo && buyTokenInfo) {
           const sellValue = parseFloat(value) * parseFloat(sellTokenInfo.priceUSD);
@@ -93,9 +87,9 @@ const SwapPage: React.FC = () => {
 
     try {
       // Calculate sell amount
-      if (sellCoin && buyCoin) {
-        const sellTokenInfo = tokenInfo.get(sellCoin);
-        const buyTokenInfo = tokenInfo.get(buyCoin);
+      if (sellToken && buyToken) {
+        const sellTokenInfo = tokenInfo.get(sellToken);
+        const buyTokenInfo = tokenInfo.get(buyToken);
 
         if (sellTokenInfo && buyTokenInfo) {
           const buyValue = parseFloat(value) * parseFloat(buyTokenInfo.priceUSD);
@@ -121,7 +115,7 @@ const SwapPage: React.FC = () => {
       return;
     }
 
-    if (sellCoin === buyCoin) {
+    if (sellToken === buyToken) {
       toast({
         title: 'Cannot swap the same token',
         variant: 'destructive',
@@ -131,14 +125,14 @@ const SwapPage: React.FC = () => {
 
     // Ensure amount has proper decimal places
     const safeAmount = ensureCorrectDecimals(sellAmount, 18); // Use max precision
-    const result = await swap(sellCoin, buyCoin, safeAmount, tokenInfo);
+    const result = await swap(sellToken, buyToken, safeAmount, tokenInfo);
 
     if (result.success) {
       toast({
         title: 'Swap Successful',
-        description: `Sold ${formatAmount(sellAmount)} ${sellCoin.toUpperCase()} for ${formatAmount(
+        description: `Sold ${formatAmount(sellAmount)} ${sellToken.toUpperCase()} for ${formatAmount(
           result.buyAmount
-        )} ${buyCoin.toUpperCase()}`,
+        )} ${buyToken.toUpperCase()}`,
       });
 
       // Reset input fields
@@ -152,17 +146,17 @@ const SwapPage: React.FC = () => {
       });
     }
   };
-  
+
   const handleSwitchToken = () => {
-    const tempSellCoin = sellCoin;
+    const tempSellToken = sellToken;
     const tempBuyAmount = buyAmount;
-    
-    setSellCoin(buyCoin);
-    setBuyCoin(tempSellCoin);
-    
+
+    setSellToken(buyToken);
+    setBuyToken(tempSellToken);
+
     setSellAmount(tempBuyAmount);
     setBuyAmount(sellAmount);
-  }
+  };
 
   if (!hasHydrated) {
     return <div>Loading...</div>;
@@ -176,7 +170,7 @@ const SwapPage: React.FC = () => {
     <Layout>
       <div className="max-w-2xl mx-auto mt-8">
         <div className="relative mt-2 flex flex-col gap-1">
-          <div 
+          <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-10 border-2 border-background flex items-center justify-center bg-muted/80 rounded-md cursor-pointer hover:bg-muted"
             onClick={handleSwitchToken}
           >
@@ -185,77 +179,47 @@ const SwapPage: React.FC = () => {
 
           <div className="flex flex-col gap-3 p-4 bg-muted/80 rounded-2xl">
             <div className="text-sm text-muted-foreground">Sell</div>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <input
-                className="text-3xl h-12 border-none w-full focus:outline-none bg-transparent"
-                placeholder="0"
-                value={displaySellAmount}
-                onChange={handleSellAmountChange}
-                type="number"
-                min="0"
-                step="0.000001"
-              />
-              <Select value={sellCoin} onValueChange={handleSellCoinChange}>
-                <SelectTrigger className="h-12 border-none rounded-2xl">
-                  <SelectValue placeholder="Select a token" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(coinInfoData).filter(coin => coin !== buyCoin).map((coin) => (
-                    <SelectItem key={coin} value={coin}>
-                      {coin.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SwapInput
+              value={displaySellAmount}
+              baseToken={buyToken}
+              quoteToken={sellToken}
+              onValueChange={handleSellAmountChange}
+              onTokenChange={handleSellTokenChange}
+              placeholder="Select a token"
+            />
             <div className="text-xs text-right text-muted-foreground">
-              Balance: {formatBalance(sellBalance)} {sellCoin.toUpperCase()}
+              Balance: {formatBalance(sellBalance)} {sellToken.toUpperCase()}
             </div>
           </div>
           <div className="flex flex-col gap-2 p-4 bg-muted/80 rounded-2xl">
             <div className="text-sm text-muted-foreground">Buy</div>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <input
-                className="text-3xl h-12 border-none w-full focus:outline-none bg-transparent"
-                placeholder="0"
-                value={displayBuyAmount}
-                onChange={handleBuyAmountChange}
-                type="number"
-                min="0"
-                step="0.000001"
-              />
-              <Select value={buyCoin} onValueChange={handleBuyCoinChange}>
-                <SelectTrigger className="h-12 border-none rounded-2xl">
-                  <SelectValue placeholder="Select a token" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(coinInfoData).filter(coin => coin !== sellCoin).map((coin) => (
-                    <SelectItem key={coin} value={coin}>
-                      {coin.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SwapInput
+              value={displayBuyAmount}
+              baseToken={sellToken}
+              quoteToken={buyToken}
+              onValueChange={handleBuyAmountChange}
+              onTokenChange={handleBuyTokenChange}
+              placeholder="Select a token"
+            />
             <div className="text-xs text-right text-muted-foreground">
-              Balance: {formatBalance(buyBalance)} {buyCoin.toUpperCase()}
+              Balance: {formatBalance(buyBalance)} {buyToken.toUpperCase()}
             </div>
           </div>
         </div>
 
-        {tokenInfo.size > 0 && sellCoin !== buyCoin && (
+        {tokenInfo.size > 0 && sellToken !== buyToken && (
           <div className="mt-3 p-2 bg-muted/40 rounded-lg">
             <div className="flex justify-between text-sm">
               <span>Rate</span>
               <span>
-                1 {sellCoin.toUpperCase()} ≈{' '}
-                {tokenInfo.get(sellCoin) && tokenInfo.get(buyCoin)
+                1 {sellToken.toUpperCase()} ≈{' '}
+                {tokenInfo.get(sellToken) && tokenInfo.get(buyToken)
                   ? formatAmount(
-                      parseFloat(tokenInfo.get(sellCoin)!.priceUSD) /
-                        parseFloat(tokenInfo.get(buyCoin)!.priceUSD)
+                      parseFloat(tokenInfo.get(sellToken)!.priceUSD) /
+                        parseFloat(tokenInfo.get(buyToken)!.priceUSD)
                     )
                   : '0'}{' '}
-                {buyCoin.toUpperCase()}
+                {buyToken.toUpperCase()}
               </span>
             </div>
           </div>
@@ -267,10 +231,10 @@ const SwapPage: React.FC = () => {
             color="primary"
             onClick={handleSwap}
             disabled={
-              !sellAmount || parseFloat(sellAmount) <= 0 || sellCoin === buyCoin || isSwapping
+              !sellAmount || parseFloat(sellAmount) <= 0 || sellToken === buyToken || isSwapping
             }
           >
-            {isSwapping ? <Spin /> : 'Swap'}
+            {isSwapping ? <Loader /> : 'Swap'}
           </Button>
         </div>
       </div>

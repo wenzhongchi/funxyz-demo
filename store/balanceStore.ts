@@ -1,10 +1,10 @@
-import { CoinName, coinInfoData } from '@/config/coinConfig';
-import { TokenInfo } from '@/types/token';
-import { formatUnits, parseUnits } from 'ethers';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ensureCorrectDecimals } from '@/lib/utils';
-import { COIN_DECIMALS } from '@/lib/constants';
+import { formatUnits, parseUnits } from 'ethers';
+
+import { COIN_DECIMALS, COIN_INFO, CoinName } from '@config/coin';
+import { TokenInfo } from '@type/token';
+import { ensureCorrectDecimals } from '@utils/utils';
 
 // Token balance interface
 interface TokenBalance {
@@ -14,7 +14,7 @@ interface TokenBalance {
   decimals: number;
 }
 
-interface TokenBalanceStore {
+interface BalanceStore {
   // User token balance records
   balances: Record<CoinName, TokenBalance>;
   // Method to get balance
@@ -26,8 +26,8 @@ interface TokenBalanceStore {
   setIsSwapping: (isSwapping: boolean) => void;
   // Execute swap operation
   swap: (
-    sellCoin: CoinName,
-    buyCoin: CoinName,
+    sellToken: CoinName,
+    buyToken: CoinName,
     sellAmount: string,
     tokenPrices: Map<CoinName, TokenInfo>
   ) => Promise<{ buyAmount: string; success: boolean; message?: string }>;
@@ -51,7 +51,7 @@ const defaultBalances = {
 };
 
 // Initial balances
-const DEFAULT_BALANCES: Record<CoinName, TokenBalance> = Object.keys(coinInfoData).reduce(
+const DEFAULT_BALANCES: Record<CoinName, TokenBalance> = Object.keys(COIN_INFO).reduce(
   (acc, coinName) => {
     const coin = coinName as CoinName;
     return {
@@ -65,7 +65,7 @@ const DEFAULT_BALANCES: Record<CoinName, TokenBalance> = Object.keys(coinInfoDat
   {} as Record<CoinName, TokenBalance>
 );
 
-export const useTokenBalanceStore = create<TokenBalanceStore>()(
+export const useBalanceStore = create<BalanceStore>()(
   persist(
     (set, get) => ({
       balances: DEFAULT_BALANCES,
@@ -87,7 +87,7 @@ export const useTokenBalanceStore = create<TokenBalanceStore>()(
         try {
           // Ensure amount doesn't have more decimal places than the token supports
           const safeAmount = ensureCorrectDecimals(amount, decimals);
-          
+
           // Convert to precise value with correct decimals
           const parsedAmount = parseUnits(safeAmount, decimals).toString();
 
@@ -106,54 +106,54 @@ export const useTokenBalanceStore = create<TokenBalanceStore>()(
       },
 
       swap: async (
-        sellCoin: CoinName,
-        buyCoin: CoinName,
+        sellToken: CoinName,
+        buyToken: CoinName,
         sellAmount: string,
         tokenPrices: Map<CoinName, TokenInfo>
       ) => {
         const { balances, setBalance } = get();
 
         // Check if tokens exist
-        if (!balances[sellCoin] || !balances[buyCoin]) {
+        if (!balances[sellToken] || !balances[buyToken]) {
           return { buyAmount: '0', success: false, message: 'Token does not exist' };
         }
 
         // Get token price information
-        const sellTokenInfo = tokenPrices.get(sellCoin);
-        const buyTokenInfo = tokenPrices.get(buyCoin);
+        const sellTokenInfo = tokenPrices.get(sellToken);
+        const buyTokenInfo = tokenPrices.get(buyToken);
 
         if (!sellTokenInfo || !buyTokenInfo) {
           return { buyAmount: '0', success: false, message: 'Cannot get token prices' };
         }
 
         // Check if balance is sufficient
-        const sellBalance = get().getBalance(sellCoin);
+        const sellBalance = get().getBalance(sellToken);
         if (parseFloat(sellBalance) < parseFloat(sellAmount)) {
           return { buyAmount: '0', success: false, message: 'Insufficient balance' };
         }
 
         set({ isSwapping: true });
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        
+
         // Calculate buy amount: sell amount * sell token price / buy token price
         const sellValue = parseFloat(sellAmount) * parseFloat(sellTokenInfo.priceUSD);
         const buyAmount = (sellValue / parseFloat(buyTokenInfo.priceUSD)).toString();
 
         // Ensure amounts have correct decimal places
-        const sellDecimals = balances[sellCoin].decimals;
-        const buyDecimals = balances[buyCoin].decimals;
-        
+        const sellDecimals = balances[sellToken].decimals;
+        const buyDecimals = balances[buyToken].decimals;
+
         const safeSellAmount = ensureCorrectDecimals(sellAmount, sellDecimals);
         const safeBuyAmount = ensureCorrectDecimals(buyAmount, buyDecimals);
 
         // Update balances
         const newSellBalance = (parseFloat(sellBalance) - parseFloat(safeSellAmount)).toString();
-        const oldBuyBalance = get().getBalance(buyCoin);
+        const oldBuyBalance = get().getBalance(buyToken);
         const newBuyBalance = (parseFloat(oldBuyBalance) + parseFloat(safeBuyAmount)).toString();
 
         // Save new balances
-        setBalance(sellCoin, newSellBalance);
-        setBalance(buyCoin, newBuyBalance);
+        setBalance(sellToken, newSellBalance);
+        setBalance(buyToken, newBuyBalance);
 
         set({ isSwapping: false });
         return { buyAmount: safeBuyAmount, success: true };

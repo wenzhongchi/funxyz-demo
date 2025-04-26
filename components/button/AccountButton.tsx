@@ -1,7 +1,7 @@
-import { useTokenBalanceStore } from '@/store/tokenBalanceStore';
-import { formatBalance } from '@/lib/utils';
-import { COIN_DECIMALS } from '@/lib/constants';
-import { Button } from './ui/button';
+import { COIN_DECIMALS } from '@config/coin';
+import { useBalanceStore } from '@store/balanceStore';
+import { formatBalance } from '@utils/utils';
+
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog';
+} from '../dialog/Dialog';
+
+import { Button } from './Button';
 
 const AccountTokenButton = () => {
-  const { balances } = useTokenBalanceStore();
+  const { balances } = useBalanceStore();
 
   const tokens = [
     { symbol: 'USDT', balance: balances.usdt?.balance, decimals: COIN_DECIMALS.USDT },
@@ -23,18 +25,18 @@ const AccountTokenButton = () => {
 
   const formatTokenBalance = (balance: string | number | undefined, decimals: number): string => {
     if (!balance) return '0';
-    
+
     const num = typeof balance === 'string' ? parseFloat(balance) : balance;
-    
+
     const formatted = num / Math.pow(10, decimals);
-    
+
     return formatBalance(formatted);
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Tokens</Button>
+        <Button variant="outline">Account</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -49,7 +51,9 @@ const AccountTokenButton = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Balance</span>
-                <span className="text-2xl font-bold">{formatTokenBalance(token.balance, token.decimals)}</span>
+                <span className="text-2xl font-bold">
+                  {formatTokenBalance(token.balance, token.decimals)}
+                </span>
               </div>
             </div>
           ))}

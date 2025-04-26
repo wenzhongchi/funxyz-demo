@@ -1,4 +1,4 @@
-import AccountTokenButton from '../AccountTokenButton';
+import AccountTokenButton from '../button/AccountButton';
 
 const Header = () => {
   return (

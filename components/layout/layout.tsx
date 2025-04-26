@@ -1,6 +1,8 @@
-import Header from "./header";
+import { PropsWithChildren } from 'react';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+import Header from './header';
+
+const Layout = ({ children }: PropsWithChildren) => {
   return (
     <div className="flex flex-col min-h-screen bg-background antialiased">
       <Header />
@@ -10,4 +12,3 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default Layout;
-

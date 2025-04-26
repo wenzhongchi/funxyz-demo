@@ -1,7 +1,9 @@
-import { apiKey, coinInfoData, CoinName } from '@/config/coinConfig';
-import { TokenInfo } from '@/types/token';
-import { getAssetPriceInfo } from '@funkit/api-base';
 import { useEffect, useState } from 'react';
+import { getAssetPriceInfo } from '@funkit/api-base';
+
+import { COIN_INFO, CoinName } from '@config/coin';
+import { API_KEY } from '@config/constant';
+import { TokenInfo } from '@type/token';
 
 export const useTokenPrice = () => {
   const [tokenInfo, setTokenInfo] = useState<Map<CoinName, TokenInfo>>(new Map());
@@ -9,9 +11,9 @@ export const useTokenPrice = () => {
   const fetchPrice = async (coinName: CoinName) => {
     try {
       const info = await getAssetPriceInfo({
-        chainId: coinInfoData[coinName].chainId,
-        assetTokenAddress: coinInfoData[coinName].address,
-        apiKey: apiKey,
+        chainId: COIN_INFO[coinName].chainId,
+        assetTokenAddress: COIN_INFO[coinName].address,
+        apiKey: API_KEY,
       });
 
       // Ensure returned info contains priceUSD field
@@ -32,7 +34,7 @@ export const useTokenPrice = () => {
   };
 
   useEffect(() => {
-    const coinNames = Object.keys(coinInfoData) as CoinName[];
+    const coinNames = Object.keys(COIN_INFO) as CoinName[];
     Promise.all(coinNames.map(fetchPrice)).then((tokenInfos) => {
       setTokenInfo(new Map(tokenInfos.map((tokenInfo, index) => [coinNames[index], tokenInfo])));
     });
