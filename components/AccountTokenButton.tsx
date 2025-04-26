@@ -21,17 +21,13 @@ const AccountTokenButton = () => {
     { symbol: 'WBTC', balance: balances.wbtc?.balance, decimals: COIN_DECIMALS.WBTC },
   ];
 
-  // 处理代币余额显示，考虑小数位数
   const formatTokenBalance = (balance: string | number | undefined, decimals: number): string => {
     if (!balance) return '0';
     
-    // 转换为数字
     const num = typeof balance === 'string' ? parseFloat(balance) : balance;
     
-    // 根据小数位处理
     const formatted = num / Math.pow(10, decimals);
     
-    // 使用格式化函数
     return formatBalance(formatted);
   };
 

@@ -152,6 +152,17 @@ const SwapPage: React.FC = () => {
       });
     }
   };
+  
+  const handleSwitchToken = () => {
+    const tempSellCoin = sellCoin;
+    const tempBuyAmount = buyAmount;
+    
+    setSellCoin(buyCoin);
+    setBuyCoin(tempSellCoin);
+    
+    setSellAmount(tempBuyAmount);
+    setBuyAmount(sellAmount);
+  }
 
   if (!hasHydrated) {
     return <div>Loading...</div>;
@@ -165,7 +176,10 @@ const SwapPage: React.FC = () => {
     <Layout>
       <div className="max-w-2xl mx-auto mt-8">
         <div className="relative mt-2 flex flex-col gap-1">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-10 border-2 border-background flex items-center justify-center bg-muted/80 rounded-md">
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-10 border-2 border-background flex items-center justify-center bg-muted/80 rounded-md cursor-pointer hover:bg-muted"
+            onClick={handleSwitchToken}
+          >
             <Image src="/swap/arrow.svg" alt="arrow" width={20} height={20} />
           </div>
 
@@ -186,7 +200,7 @@ const SwapPage: React.FC = () => {
                   <SelectValue placeholder="Select a token" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(coinInfoData).map((coin) => (
+                  {Object.keys(coinInfoData).filter(coin => coin !== buyCoin).map((coin) => (
                     <SelectItem key={coin} value={coin}>
                       {coin.toUpperCase()}
                     </SelectItem>
@@ -215,7 +229,7 @@ const SwapPage: React.FC = () => {
                   <SelectValue placeholder="Select a token" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(coinInfoData).map((coin) => (
+                  {Object.keys(coinInfoData).filter(coin => coin !== sellCoin).map((coin) => (
                     <SelectItem key={coin} value={coin}>
                       {coin.toUpperCase()}
                     </SelectItem>
