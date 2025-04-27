@@ -8,7 +8,7 @@ import { TOKEN_DECIMALS, TokenSymbol } from '@config/token';
  * 2. Trim trailing zeros
  * 3. Handle scientific notation conversion
  */
-export function formatAmount(amount: string | number): string {
+export const formatAmount = (amount: string | number): string => {
   if (!amount && amount !== 0) return '0';
 
   // Convert to number
@@ -29,7 +29,7 @@ export function formatAmount(amount: string | number): string {
   });
 
   return formatted;
-}
+};
 
 export const formatBalance = (balance: string | number | undefined, decimals: number): string => {
   if (!balance) return '0';
@@ -87,7 +87,7 @@ export const formatBalance = (balance: string | number | undefined, decimals: nu
  * Ensure the number string has no more than maxDecimals decimal places
  * Prevent errors when using parseUnits or similar functions that require specific precision
  */
-export function ensureCorrectDecimals(amount: string | number, maxDecimals: number): string {
+export const ensureCorrectDecimals = (amount: string | number, maxDecimals: number): string => {
   if (!amount && amount !== 0) return '0';
 
   const amountStr = amount.toString();
@@ -113,7 +113,7 @@ export function ensureCorrectDecimals(amount: string | number, maxDecimals: numb
   }
 
   return parts.join('.');
-}
+};
 
 // Get decimal places for a token
 export const getTokenDecimals = (token: TokenSymbol): number => {
