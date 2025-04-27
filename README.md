@@ -37,8 +37,6 @@ This is a Next.js-based web application that allows users to swap between differ
 ### Running the Application
 
 ```bash
-npm run dev
-# or
 yarn dev
 ```
 
@@ -88,5 +86,4 @@ The application will be available at http://localhost:5074
 2. Implement transaction history
 3. Add more token pairs
 4. Enhance error handling and user feedback
-5. Add loading states for API calls
-6. Implement price charts and market data
+5. Implement price charts and market data
