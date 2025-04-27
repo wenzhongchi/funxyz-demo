@@ -140,20 +140,11 @@ export const useBalanceStore = create<BalanceStore>()(
         const sellTokenDecimals = balances[sellToken].decimals;
         const receiveTokenDecimals = balances[receiveToken].decimals;
 
-        console.log('Swap calculation details:');
-        console.log(`Sell token: ${sellToken}, decimals: ${sellTokenDecimals}`);
-        console.log(`Receive token: ${receiveToken}, decimals: ${receiveTokenDecimals}`);
-        console.log(`Sell amount: ${sellAmount}`);
-        console.log(`Sell token price: ${sellTokenInfo.priceUSD}`);
-        console.log(`Receive token price: ${receiveTokenInfo.priceUSD}`);
-
         // Convert sell amount to precise value (wei)
-        const sellAmountBN = new BigNumber(sellAmount).times(10 ** sellTokenDecimals);
-        console.log(`Sell amount (wei): ${sellAmountBN.toString()}`);
+        const sellAmountInWei = new BigNumber(sellAmount).times(10 ** sellTokenDecimals);
 
         // Check if balance is sufficient
         const sellTokenBalance = balances[sellToken].balance;
-        console.log(`Sell token balance: ${sellTokenBalance}`);
 
         if (new BigNumber(sellTokenBalance).isLessThan(new BigNumber(sellAmount))) {
           return { receiveAmount: '0', success: false, message: 'Insufficient balance' };
@@ -169,45 +160,40 @@ export const useBalanceStore = create<BalanceStore>()(
           const sellTokenPriceBN = new BigNumber(sellTokenInfo.priceUSD);
           const receiveTokenPriceBN = new BigNumber(receiveTokenInfo.priceUSD);
 
-          console.log(`Sell amount (BigNumber): ${sellAmountBN.toString()}`);
-          console.log(`Sell token price (BigNumber): ${sellTokenPriceBN.toString()}`);
-          console.log(`Receive token price (BigNumber): ${receiveTokenPriceBN.toString()}`);
-
           // Calculate the exchange rate: sell token price / receive token price
           const tokenExchangeRate = sellTokenPriceBN.dividedBy(receiveTokenPriceBN);
-          console.log(`Token exchange rate: ${tokenExchangeRate.toString()}`);
 
           // Calculate receive amount in wei
-          const receiveAmountInWei = sellAmountBN
+          const receiveAmountInWei = sellAmountInWei
             .dividedBy(10 ** sellTokenDecimals)
             .times(tokenExchangeRate)
             .times(10 ** receiveTokenDecimals);
-          console.log(`Receive amount (wei): ${receiveAmountInWei.toString()}`);
 
           // Limit the result to the maximum number of decimals for the receive token
           const limitedReceiveAmountInWei = receiveAmountInWei.toFixed(0, BigNumber.ROUND_DOWN);
-          console.log(`Limited receive amount (wei): ${limitedReceiveAmountInWei}`);
 
           // Update balances
           const sellTokenBalanceBN = new BigNumber(sellTokenBalance);
-          const newSellTokenBalance = sellTokenBalanceBN.minus(sellAmountBN).toString();
-          console.log(`New sell token balance: ${newSellTokenBalance}`);
+          const newSellTokenBalance = sellTokenBalanceBN.minus(sellAmountInWei).toString();
 
           const receiveTokenBalance = balances[receiveToken].balance;
           const receiveTokenBalanceBN = new BigNumber(receiveTokenBalance);
-          console.log(`Current receive token balance: ${receiveTokenBalance}`);
 
           const newReceiveTokenBalance = receiveTokenBalanceBN
             .plus(limitedReceiveAmountInWei)
             .toString();
-          console.log(`New receive token balance: ${newReceiveTokenBalance}`);
 
           // Save new balances
           setBalance(sellToken, newSellTokenBalance);
           setBalance(receiveToken, newReceiveTokenBalance);
 
           set({ isSwapping: false });
-          return { receiveAmount: limitedReceiveAmountInWei, success: true };
+          return {
+            receiveAmount: new BigNumber(limitedReceiveAmountInWei)
+              .dividedBy(10 ** receiveTokenDecimals)
+              .toString(),
+            success: true,
+          };
         } catch (error) {
           console.error('Error during swap calculation:', error);
           set({ isSwapping: false });
