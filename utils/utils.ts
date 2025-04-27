@@ -1,3 +1,7 @@
+import BigNumber from 'bignumber.js';
+
+import { TOKEN_DECIMALS, TokenSymbol } from '@config/token';
+
 /**
  * Format numbers for friendly display
  * 1. Display up to 6 decimal places for large numbers
@@ -27,20 +31,57 @@ export function formatAmount(amount: string | number): string {
   return formatted;
 }
 
-/**
- * Format balance display
- * Show balances with appropriate decimal places and thousand separators
- */
-export function formatBalance(balance: string | number): string {
-  if (!balance && balance !== 0) return '0';
+export const formatBalance = (balance: string | number | undefined, decimals: number): string => {
+  if (!balance) return '0';
 
-  const num = typeof balance === 'string' ? parseFloat(balance) : balance;
+  try {
+    const num = new BigNumber(balance);
+    const divisor = new BigNumber(10).pow(decimals);
+    const formatted = num.dividedBy(divisor);
 
-  return num.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 6,
-  });
-}
+    // Convert to string with maximum precision
+    const fullPrecision = formatted.toString();
+
+    // If the number is an integer, return it as is
+    if (formatted.isInteger()) {
+      return fullPrecision;
+    }
+
+    // Split into integer and decimal parts
+    const parts = fullPrecision.split('.');
+
+    // If there's no decimal part, return the integer
+    if (parts.length === 1) {
+      return parts[0];
+    }
+
+    // Get the decimal part
+    let decimalPart = parts[1];
+
+    // If decimal part is all zeros, return just the integer
+    if (/^0+$/.test(decimalPart)) {
+      return parts[0];
+    }
+
+    // Limit to 6 decimal places
+    if (decimalPart.length > 6) {
+      decimalPart = decimalPart.substring(0, 6);
+    }
+
+    // Remove trailing zeros
+    decimalPart = decimalPart.replace(/0+$/, '');
+
+    // If all decimal digits were zeros, return just the integer
+    if (!decimalPart) {
+      return parts[0];
+    }
+
+    return `${parts[0]}.${decimalPart}`;
+  } catch (e) {
+    console.error('Error formatting token balance:', e);
+    return '0';
+  }
+};
 
 /**
  * Ensure the number string has no more than maxDecimals decimal places
@@ -73,3 +114,9 @@ export function ensureCorrectDecimals(amount: string | number, maxDecimals: numb
 
   return parts.join('.');
 }
+
+// Get decimal places for a token
+export const getTokenDecimals = (token: TokenSymbol): number => {
+  const tokenUpperCase = token.toUpperCase();
+  return TOKEN_DECIMALS[tokenUpperCase] || 18;
+};

@@ -1,4 +1,4 @@
-import { COIN_DECIMALS } from '@config/coin';
+import { TOKEN_DECIMALS, TOKEN_INFO, TokenSymbol } from '@config/token';
 import { useBalanceStore } from '@store/balanceStore';
 import { formatBalance } from '@utils/utils';
 
@@ -16,22 +16,15 @@ import { Button } from './Button';
 const AccountTokenButton = () => {
   const { balances } = useBalanceStore();
 
-  const tokens = [
-    { symbol: 'USDT', balance: balances.usdt?.balance, decimals: COIN_DECIMALS.USDT },
-    { symbol: 'ETH', balance: balances.eth?.balance, decimals: COIN_DECIMALS.ETH },
-    { symbol: 'USDC', balance: balances.usdc?.balance, decimals: COIN_DECIMALS.USDC },
-    { symbol: 'WBTC', balance: balances.wbtc?.balance, decimals: COIN_DECIMALS.WBTC },
-  ];
-
-  const formatTokenBalance = (balance: string | number | undefined, decimals: number): string => {
-    if (!balance) return '0';
-
-    const num = typeof balance === 'string' ? parseFloat(balance) : balance;
-
-    const formatted = num / Math.pow(10, decimals);
-
-    return formatBalance(formatted);
-  };
+  // Construct tokens array from TOKEN_INFO
+  const tokens = Object.keys(TOKEN_INFO).map((symbol) => {
+    const tokenSymbol = symbol as TokenSymbol;
+    return {
+      symbol: tokenSymbol.toUpperCase(),
+      balance: balances[tokenSymbol]?.balance,
+      decimals: TOKEN_DECIMALS[tokenSymbol.toUpperCase()],
+    };
+  });
 
   return (
     <Dialog>
@@ -52,7 +45,7 @@ const AccountTokenButton = () => {
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Balance</span>
                 <span className="text-2xl font-bold">
-                  {formatTokenBalance(token.balance, token.decimals)}
+                  {formatBalance(token.balance, token.decimals)}
                 </span>
               </div>
             </div>

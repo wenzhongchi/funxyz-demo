@@ -1,4 +1,4 @@
-export const COIN_INFO = {
+export const TOKEN_INFO = {
   usdc: {
     address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     chainId: '1',
@@ -17,11 +17,11 @@ export const COIN_INFO = {
   },
 };
 
-export const COIN_DECIMALS: Record<string, number> = {
+export const TOKEN_DECIMALS: Record<string, number> = {
   USDT: 6,
   USDC: 6,
   ETH: 18,
   WBTC: 18,
 };
 
-export type CoinName = keyof typeof COIN_INFO;
+export type TokenSymbol = keyof typeof TOKEN_INFO;
