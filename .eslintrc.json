@@ -18,7 +18,7 @@
           [
             "^react",
             "^next",
-            "@funkit|lucide-react|@radix-ui|zustand",
+            "@funkit|lucide-react|@radix-ui|zustand|clsx",
             "^(ethers|dayjs|lodash|bn.js|bignumber.js|child_process|class-variance-authority)"
           ],
           // Internal packages.
